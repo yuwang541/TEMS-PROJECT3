@@ -1,0 +1,196 @@
+With sourceTableA as (
+  select 
+  measure
+,time_period
+,concat('RTY_',record_type) as record_type
+,concat('ASC_',application_status) as application_status
+,concat('DSC_',decision_status) as decision_status
+,concat('PRD_',product) as product
+  
+, case when risk_loan_classification_prefix = 'BRI' then concat('BRI_',risk_loan_classification)
+       when risk_loan_classification_prefix = 'TDSR' then concat('TDSR_',risk_loan_classification)
+       when risk_loan_classification_prefix = 'GDSR' then concat('GDSR_',risk_loan_classification)
+ --      when risk_loan_classification_prefix = 'SPR' then concat('SPR_',risk_loan_classification)
+ --      when risk_loan_classification_prefix = 'ATR' then concat('ATR_',risk_loan_classification)
+       when risk_loan_classification_prefix = 'BKO' then concat('BKO_',risk_loan_classification)
+       when risk_loan_classification_prefix = 'BCO' then concat('BCO_',risk_loan_classification)
+       when risk_loan_classification_prefix = 'EAI' then concat('EAI_',risk_loan_classification)
+       else 'No_Risk_Class'
+  end as risk_loan_classification 
+ ,risk_loan_classification_prefix 
+,concat('DII_',direct_indirect) as direct_indirect 
+,concat('SEC_',security_type) as security_type
+,concat('INS_',insurance) as insurance
+,concat('BSG_',business_segment) as business_segment
+,concat('OBU_',org_business_unit) as org_business_unit
+,view
+,concat('CCY_',currency) as currency
+,data
+ from prod_rcrr_qa1.crp_appl_measure_summary
+  where  mth_end_dt='2015-10-31'
+  and cube_cd ='cbappl'
+)
+
+,lookupTable1 as (
+ Select distinct lkp.member_name as application_status from prod_rcrr_qa1.crp_dimension lkp
+ where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Application_Status'
+ )
+,lookupTable2 as (
+Select distinct lkp.member_name as decision_status  from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Decision_Status'
+)
+,lookupTable3 as (
+Select distinct lkp.member_name as business_segment  from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Business_Segment'
+)
+,lookupTable4 as (
+Select distinct lkp.member_name as security_type  from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Security_Type'
+)
+,lookupTable5 as (
+Select distinct lkp.member_name as product from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Product'
+)
+,lookupTable6 as (
+Select distinct lkp.member_name as org_business_unit from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Org_Business_Unit'
+)
+,lookupTable7 as (
+Select distinct lkp.member_name as risk_loan_classification from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'cbappl_Risk'
+)
+
+,lookupTable8 as (
+Select distinct lkp.member_name as Currency from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Currency'
+)
+
+,lookupTable9 as (
+Select lkp.member_name as direct_indirect from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Direct_Indirect'
+)
+
+,lookupTable10 as (
+Select distinct lkp.member_name as insurance from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Insurance'
+)
+
+,lookupTable11 as (
+Select distinct lkp.member_name as record_type from prod_rcrr_qa1.crp_dimension lkp
+where businesseffectivedate='2015-10-31'
+and cube_cd='cbappl'
+and dimension_cd= 'Record_Type'
+)
+
+,sourceTableB as ( 
+select 
+sa.measure
+, sa.time_period
+-- , concat('GEO_',nvl(lkp7.geography,'No_Geography')) as geography
+, nvl(lkp5.product,'PRD_No_Product') as product
+, case when risk_loan_classification_prefix = 'BRI' then nvl(lkp7.risk_loan_classification,'BRI_No_BRI')
+       when risk_loan_classification_prefix = 'TDSR' then nvl(lkp7.risk_loan_classification,'TDSR_No_TDSR')
+       when risk_loan_classification_prefix = 'GDSR' then nvl(lkp7.risk_loan_classification,'GDSR_No_GDSR')
+ --      when risk_loan_classification_prefix = 'SPR' then nvl(lkp7.risk_loan_classification,'SPR_No_Specialty')
+ --      when risk_loan_classification_prefix = 'ATR' then nvl(lkp7.risk_loan_classification,'ATR_No_ATrisk')
+	when risk_loan_classification_prefix = 'BKO' then nvl(lkp7.risk_loan_classification,'BKO_No_Bky_Indicator')
+       when risk_loan_classification_prefix = 'BCO' then nvl(lkp7.risk_loan_classification,'BCO_No_CutOff_Ind')
+       when risk_loan_classification_prefix = 'EAI' then nvl(lkp7.risk_loan_classification,'EAI_No_Exception_Indicator')
+       else 'RLC_No_Risk_Class'
+  end as risk_loan_classification
+, nvl(lkp11.record_type,'RTY_No_Record_Type') as record_type
+, nvl(lkp1.application_status,'ASC_No_Application_Status') as application_status
+, nvl(lkp2.decision_status,'DSC_No_Dec_Status') as decision_status
+, nvl(lkp4.security_type,'SEC_No_Security') as security_type
+, nvl(lkp3.business_segment,'BSG_No_Bus_Seg') as business_segment
+, nvl(lkp6.org_business_unit,'OBU_No_Org_Business_Unit') as org_business_unit
+, 'Base' as view
+
+, nvl(lkp8.currency,'CCY_No_Currency') as currency
+, nvl(lkp9.direct_indirect,'INS_No_Dir_Ind') as direct_indirect
+, nvl(lkp10.insurance,'INS_No_Insurance') as insurance
+, sa.data
+
+
+ from sourceTableA sa
+ left join lookupTable1 lkp1
+on sa.application_status=lkp1.application_status
+left join lookupTable2 lkp2
+on sa.decision_status = lkp2.decision_status
+left join lookupTable3 lkp3
+on sa.business_segment= lkp3.business_segment
+left join lookupTable4 lkp4
+on sa.security_type = lkp4.security_type
+left join lookupTable5 lkp5
+on sa.product = lkp5.product  
+left join lookupTable6 lkp6
+on sa.org_business_unit = lkp6.org_business_unit 
+left join lookupTable7 lkp7
+on sa.risk_loan_classification = lkp7.risk_loan_classification
+left join lookupTable8 lkp8
+on sa.Currency = lkp8.Currency
+left join lookupTable9 lkp9
+on sa.direct_indirect = lkp9.direct_indirect
+left join lookupTable10 lkp10
+on sa.insurance= lkp10.insurance
+left join lookupTable11 lkp11
+on sa.record_type= lkp11.record_type
+) 
+,sourceTable as (
+select
+   measure
+,time_period
+,product
+,risk_loan_classification
+,record_type
+,application_status
+,decision_status
+,direct_indirect
+,security_type
+,insurance
+,business_segment
+,org_business_unit
+,view
+,currency
+,count(*) as count_num
+,sum(data) as data
+from sourceTableB 
+group by
+ measure
+,time_period
+,product
+,risk_loan_classification
+,record_type
+,application_status
+,decision_status
+,direct_indirect
+,security_type
+,insurance
+,business_segment
+,org_business_unit
+,view
+,currency
+)
+
+select  count(*)  from sourceTable s
+;
